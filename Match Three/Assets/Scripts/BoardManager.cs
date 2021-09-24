@@ -15,7 +15,7 @@ public class BoardManager : MonoBehaviour
                 instance = FindObjectOfType<BoardManager>();
                 if (instance == null)
                 {
-                    Debug.LogError("Fatal Error: BoardManager not Found");
+                    Debug.LogError("Instance for BoardManager not Found");
                 }
             }
             return instance;
@@ -34,7 +34,7 @@ public class BoardManager : MonoBehaviour
 
     private Vector2 startPos, endPos;
     private TileController[,] tiles;
-
+    private int combo = 0;
 
     public bool IsAnimating
     {
@@ -152,6 +152,29 @@ public class BoardManager : MonoBehaviour
 
     #region match
 
+    public void Process()
+    {
+        IsProcessing = true;
+        combo = 0;
+        ProcessMatches();
+    }
+
+    private void ProcessMatches()
+    {
+        List<TileController> allMatchingTiles = GetAllMatches();
+
+        if (allMatchingTiles == null || allMatchingTiles.Count == 0)
+        {
+            IsProcessing = false;
+            return;
+        }
+
+        combo += 1;
+        ScoreManager.Instance.IncrementScore(allMatchingTiles.Count, combo);
+
+        StartCoroutine(ClearMatches(allMatchingTiles, ProcessDrop));
+    }
+
     public List<TileController> GetAllMatches()
     {
         List<TileController> matchingTiles = new List<TileController>();
@@ -179,24 +202,6 @@ public class BoardManager : MonoBehaviour
         }
 
         return matchingTiles;
-    }
-
-    public void Process()
-    {
-        IsProcessing = true;
-        ProcessMatches();
-    }
-
-    private void ProcessMatches()
-    {
-        List<TileController> allMatchingTiles = GetAllMatches();
-
-        if (allMatchingTiles == null || allMatchingTiles.Count == 0)
-        {
-            IsProcessing = false;
-            return;
-        }
-        StartCoroutine(ClearMatches(allMatchingTiles, ProcessDrop));
     }
 
     private IEnumerator ClearMatches(List<TileController> matchingTiles, System.Action OnCompleted)

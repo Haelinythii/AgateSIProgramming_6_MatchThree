@@ -16,6 +16,7 @@ public class TileController : MonoBehaviour
 
     public int id;
     private BoardManager boardManager;
+    private GameFlowManager gameFlowManager;
     private SpriteRenderer spriteRenderer;
 
     private static TileController previousSelected = null;
@@ -25,6 +26,7 @@ public class TileController : MonoBehaviour
     private void Awake()
     {
         boardManager = BoardManager.Instance;
+        gameFlowManager = GameFlowManager.Instance;
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
@@ -43,7 +45,7 @@ public class TileController : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (spriteRenderer.sprite == null || boardManager.IsAnimating) return;
+        if (spriteRenderer.sprite == null || boardManager.IsAnimating || gameFlowManager.IsGameOver) return;
 
         if (isSelected)
         {
@@ -61,8 +63,7 @@ public class TileController : MonoBehaviour
                 {
                     TileController otherTile = previousSelected;
                     previousSelected.Deselect();
-
-                    // swap tile 2 kali
+                    
                     SwapTile(otherTile, () => {
                         if(boardManager.GetAllMatches().Count > 0)
                         {
