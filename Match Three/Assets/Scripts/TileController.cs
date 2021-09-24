@@ -16,6 +16,7 @@ public class TileController : MonoBehaviour
 
     private static TileController previousSelected = null;
     private bool isSelected = false;
+    public bool IsDestroyed { get; private set; }
 
     private void Awake()
     {
@@ -54,7 +55,14 @@ public class TileController : MonoBehaviour
 
                     // swap tile 2 kali
                     SwapTile(otherTile, () => {
-                        SwapTile(otherTile);
+                        if(boardManager.GetAllMatches().Count > 0)
+                        {
+                            Debug.Log("Match");
+                        }
+                        else
+                        {
+                            SwapTile(otherTile);
+                        }
                     });
                 }
                 else
@@ -62,10 +70,6 @@ public class TileController : MonoBehaviour
                     previousSelected.Deselect();
                     Select();
                 }
-
-                // run if cant swap (disabled for now)
-                //previousSelected.Deselect();
-                //Select();
             }
         }
     }
@@ -123,4 +127,70 @@ public class TileController : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(transform.position, raycastDirection, spriteRenderer.size.x);
         return hit ? hit.collider.GetComponent<TileController>() : null;
     }
+
+    #region Check Match
+
+    public List<TileController> GetAllMatches()
+    {
+        if (IsDestroyed) return null;
+
+        List<TileController> matchingTiles = new List<TileController>();
+
+        List<TileController> horizontalMatchingTiles = GetOneLineMatch(new Vector2[2] { Vector2.right, Vector2.left });
+        List<TileController> verticalMatchingTiles = GetOneLineMatch(new Vector2[2] { Vector2.up, Vector2.down });
+
+        if(horizontalMatchingTiles != null)
+        {
+            matchingTiles.AddRange(horizontalMatchingTiles);
+        }
+        if(verticalMatchingTiles != null)
+        {
+            matchingTiles.AddRange(verticalMatchingTiles);
+        }
+
+        //add diri sendiri jika ada match dengan vertical dan horizontal
+        if(matchingTiles != null && matchingTiles.Count >= 2)
+        {
+            matchingTiles.Add(this);
+        }
+        return matchingTiles;
+    }
+
+    private List<TileController> GetOneLineMatch(Vector2[] raycastDirections)
+    {
+        List<TileController> matchingTiles = new List<TileController>();
+
+        for (int i = 0; i < raycastDirections.Length; i++)
+        {
+            matchingTiles.AddRange(GetMatch(raycastDirections[i]));
+        }
+
+        if(matchingTiles.Count >= 2)
+        {
+            return matchingTiles;
+        }
+        return null;
+    }
+
+    private List<TileController> GetMatch(Vector2 raycastDirection)
+    {
+        List<TileController> matchingTiles = new List<TileController>();
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, raycastDirection, spriteRenderer.size.x);
+
+        while (hit)
+        {
+            TileController hitTile = hit.collider.GetComponent<TileController>();
+            if(hitTile.id != id || hitTile.IsDestroyed)
+            {
+                break;
+            }
+
+            matchingTiles.Add(hitTile);
+            hit = Physics2D.Raycast(hitTile.transform.position, raycastDirection, spriteRenderer.size.x);
+        }
+
+        return matchingTiles;
+    }
+
+    #endregion
 }
