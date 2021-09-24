@@ -35,6 +35,17 @@ public class BoardManager : MonoBehaviour
     private Vector2 startPos, endPos;
     private TileController[,] tiles;
 
+
+    public bool IsAnimating
+    {
+        get
+        {
+            return IsSwapping;
+        }
+    }
+
+    public bool IsSwapping { get; set; }
+
     private void Start()
     {
         Vector2 tileSize = tilePrefab.GetComponent<SpriteRenderer>().size;
@@ -85,5 +96,53 @@ public class BoardManager : MonoBehaviour
         }
 
         return possibleIDs;
+    }
+
+    #region swap tile
+
+    public IEnumerator SwapTilePosition(TileController tileOne, TileController tileTwo, System.Action OnCompleted)
+    {
+        IsSwapping = true;
+
+        Vector2Int indexTileOne = GetTileIndex(tileOne);
+        Vector2Int indexTileTwo = GetTileIndex(tileTwo);
+
+        tiles[indexTileOne.x, indexTileOne.y] = tileTwo;
+        tiles[indexTileTwo.x, indexTileTwo.y] = tileOne;
+
+        tileOne.ChangeID(tileOne.id, indexTileTwo.x, indexTileTwo.y);
+        tileTwo.ChangeID(tileTwo.id, indexTileOne.x, indexTileOne.y);
+
+        bool isRoutineTileOneCompleted = false;
+        bool isRoutineTileTwoCompleted = false;
+
+        StartCoroutine(tileOne.MoveTilePosition(GetPositionFromIndex(indexTileTwo), () => { isRoutineTileOneCompleted = true; }));
+        StartCoroutine(tileTwo.MoveTilePosition(GetPositionFromIndex(indexTileOne), () => { isRoutineTileTwoCompleted = true; }));
+
+        yield return new WaitUntil(() => { return isRoutineTileOneCompleted && isRoutineTileTwoCompleted; });
+
+        OnCompleted?.Invoke();
+
+        IsSwapping = false;
+    }
+
+    #endregion
+
+    private Vector2Int GetTileIndex(TileController tile)
+    {
+        for (int x = 0; x < boardSize.x; x++)
+        {
+            for (int y = 0; y < boardSize.y; y++)
+            {
+                if (tile == tiles[x, y]) return new Vector2Int(x, y);
+            }
+        }
+        return new Vector2Int(-1, -1);
+    }
+
+    public Vector2 GetPositionFromIndex(Vector2Int index)
+    {
+        Vector2 tileSize = tilePrefab.GetComponent<SpriteRenderer>().size;
+        return new Vector2(startPos.x + ((tileSize.x + offsetTile.x) * index.x), startPos.y + ((tileSize.y + offsetTile.y) * index.y));
     }
 }

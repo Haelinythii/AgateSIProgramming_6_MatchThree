@@ -223,6 +223,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9763a1c5b6d22548b9289529bb7e51a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boardSize: {x: 8, y: 4}
+  offsetTile: {x: 0.1, y: 0.1}
+  offsetBoard: {x: 0, y: -0.25}
+  tileTypes:
+  - {fileID: 21300000, guid: ca00069969b73814e8d91e3e1484a191, type: 3}
+  - {fileID: 21300000, guid: a7ea1b8d885506a4fbfecdfb520b86e0, type: 3}
+  - {fileID: 21300000, guid: 9d77fb19e84851547aba2e8d718bbdb3, type: 3}
+  - {fileID: 21300000, guid: 24b1bacc12f74dc47bdddb4338263a3c, type: 3}
+  - {fileID: 21300000, guid: 065055898390c394daa82ec7fa238d72, type: 3}
+  - {fileID: 21300000, guid: a954e73883bd3694187cf9fefe4396ea, type: 3}
+  tilePrefab: {fileID: 1855929352772326720, guid: 7c07aa4929c181f4cb1c104285e6b3aa,
+    type: 3}
 --- !u!4 &1935029361
 Transform:
   m_ObjectHideFlags: 0
