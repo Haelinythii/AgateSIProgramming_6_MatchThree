@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -235,4 +234,12 @@ public class TileController : MonoBehaviour
     }
 
     #endregion
+
+    public void GenerateRandomTile(int x, int y)
+    {
+        transform.localScale = sizeNormal;
+        IsDestroyed = false;
+
+        ChangeID(Random.Range(0, boardManager.tileTypes.Count), x, y);
+    }
 }
