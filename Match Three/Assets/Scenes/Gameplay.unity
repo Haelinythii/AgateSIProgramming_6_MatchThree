@@ -1371,5 +1371,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3369b131f700f8488d3c3792cb18682, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  highscoreText: {fileID: 1779524202}
-  currentscoreText: {fileID: 398684788}
+  highscoreText: {fileID: 398684788}
+  currentscoreText: {fileID: 1779524202}

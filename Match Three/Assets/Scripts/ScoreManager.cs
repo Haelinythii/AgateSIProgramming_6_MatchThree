@@ -52,6 +52,6 @@ public class ScoreManager : MonoBehaviour
 
     public void SetHighscore()
     {
-        highscore = currentScore;
+        highscore = Mathf.Max(currentScore, highscore);
     }
 }
