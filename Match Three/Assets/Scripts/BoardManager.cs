@@ -40,16 +40,20 @@ public class BoardManager : MonoBehaviour
     {
         get
         {
-            return IsSwapping;
+            return IsSwapping || IsProcessing;
         }
     }
 
     public bool IsSwapping { get; set; }
+    public bool IsProcessing { get; set; }
 
     private void Start()
     {
         Vector2 tileSize = tilePrefab.GetComponent<SpriteRenderer>().size;
         CreateBoard(tileSize);
+
+        IsProcessing = false;
+        IsSwapping = false;
     }
 
     private void CreateBoard(Vector2 tileSize)
@@ -146,6 +150,8 @@ public class BoardManager : MonoBehaviour
         return new Vector2(startPos.x + ((tileSize.x + offsetTile.x) * index.x), startPos.y + ((tileSize.y + offsetTile.y) * index.y));
     }
 
+    #region match
+
     public List<TileController> GetAllMatches()
     {
         List<TileController> matchingTiles = new List<TileController>();
@@ -174,4 +180,56 @@ public class BoardManager : MonoBehaviour
 
         return matchingTiles;
     }
+
+    public void Process()
+    {
+        IsProcessing = true;
+        ProcessMatches();
+    }
+
+    private void ProcessMatches()
+    {
+        List<TileController> allMatchingTiles = GetAllMatches();
+
+        if(allMatchingTiles == null || allMatchingTiles.Count == 0)
+        {
+            IsProcessing = false;
+            return;
+        }
+        StartCoroutine(ClearMatches(allMatchingTiles, null));
+    }
+
+    private IEnumerator ClearMatches(List<TileController> matchingTiles, System.Action OnCompleted)
+    {
+        List<bool> isAllClearingCompleted = new List<bool>();
+
+        for (int i = 0; i < matchingTiles.Count; i++)
+        {
+            isAllClearingCompleted.Add(false);
+        }
+
+        for (int i = 0; i < matchingTiles.Count; i++)
+        {
+            int index = i;
+            StartCoroutine(matchingTiles[i].SetDestroyed(() => { isAllClearingCompleted[index] = true; }));
+        }
+        yield return new WaitUntil(() => { return IsClearingCompleted(isAllClearingCompleted); });
+
+        OnCompleted?.Invoke();
+    }
+
+    public bool IsClearingCompleted(List<bool> b)
+    {
+        foreach (bool item in b)
+        {
+            if (item == false) return false;
+        }
+        return true;
+    }
+
+    #endregion
+
+    #region drop
+
+    #endregion
 }

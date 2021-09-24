@@ -9,6 +9,11 @@ public class TileController : MonoBehaviour
     private static readonly Color normalColor = Color.white;
     private static readonly float moveDuration = 0.5f;
     private static readonly Vector2[] adjacentDirection = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
+    private static readonly float destroyBigDuration = .1f;
+    private static readonly float destroySmallDuration = .4f;
+    private static readonly Vector2 sizeBig = Vector2.one * 1.2f;
+    private static readonly Vector2 sizeSmall = Vector2.zero;
+    private static readonly Vector2 sizeNormal = Vector2.one;
 
     public int id;
     private BoardManager boardManager;
@@ -22,6 +27,11 @@ public class TileController : MonoBehaviour
     {
         boardManager = BoardManager.Instance;
         spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    private void Start()
+    {
+        IsDestroyed = false;
     }
 
     public void ChangeID(int _id, int x, int y)
@@ -58,6 +68,7 @@ public class TileController : MonoBehaviour
                         if(boardManager.GetAllMatches().Count > 0)
                         {
                             Debug.Log("Match");
+                            boardManager.Process();
                         }
                         else
                         {
@@ -94,6 +105,37 @@ public class TileController : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
         transform.position = targetPos;
+        OnCompleted?.Invoke();
+    }
+
+    public IEnumerator SetDestroyed(System.Action OnCompleted)
+    {
+        id = -1;
+        name = "TILE_NULL";
+        IsDestroyed = true;
+
+        Vector2 startSize = transform.localScale;
+        float timer = 0f;
+
+        while(timer < destroyBigDuration)
+        {
+            transform.localScale = Vector2.Lerp(startSize, sizeBig, timer / destroyBigDuration);
+            timer += Time.deltaTime;
+            yield return new WaitForEndOfFrame();
+        }
+        transform.localScale = sizeBig;
+
+        startSize = transform.localScale;
+        timer = 0f;
+        while (timer < destroySmallDuration)
+        {
+            transform.localScale = Vector2.Lerp(startSize, sizeSmall, timer / destroySmallDuration);
+            timer += Time.deltaTime;
+            yield return new WaitForEndOfFrame();
+        }
+        transform.localScale = sizeSmall;
+
+        spriteRenderer.sprite = null;
         OnCompleted?.Invoke();
     }
 
