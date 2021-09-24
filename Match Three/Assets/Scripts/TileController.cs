@@ -47,6 +47,8 @@ public class TileController : MonoBehaviour
     {
         if (spriteRenderer.sprite == null || boardManager.IsAnimating || gameFlowManager.IsGameOver) return;
 
+        SoundManager.Instance.PlayTapSound();
+
         if (isSelected)
         {
             Deselect();
@@ -72,6 +74,7 @@ public class TileController : MonoBehaviour
                         }
                         else
                         {
+                            SoundManager.Instance.PlayWrongMoveSound();
                             SwapTile(otherTile);
                         }
                     });
