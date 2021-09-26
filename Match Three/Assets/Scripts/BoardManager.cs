@@ -49,6 +49,7 @@ public class BoardManager : MonoBehaviour
 
     private void Start()
     {
+        //dapatin ukuran 1 tiles
         Vector2 tileSize = tilePrefab.GetComponent<SpriteRenderer>().size;
         CreateBoard(tileSize);
 
@@ -56,12 +57,13 @@ public class BoardManager : MonoBehaviour
         IsSwapping = false;
     }
 
-    private void CreateBoard(Vector2 tileSize)
+    private void CreateBoard(Vector2 tileSize) //fungsi untuk membuat board untuk pertama kali
     {
         tiles = new TileController[boardSize.x, boardSize.y];
 
         Vector2 totalBoardSize = (tileSize + offsetTile) * (boardSize - Vector2.one);
 
+        //dapatkan start & position penaruhan tile
         startPos = (Vector2)transform.position - (totalBoardSize / 2) + offsetBoard;
         endPos = startPos + totalBoardSize;
 
@@ -69,6 +71,7 @@ public class BoardManager : MonoBehaviour
         {
             for (int y = 0; y < boardSize.y; y++)
             {
+                //create new tile dan set ke array tiles
                 TileController newTile = Instantiate(tilePrefab, new Vector2(startPos.x + ((tileSize.x + offsetTile.x) * x), startPos.y + ((tileSize.y + offsetTile.y) * y)), tilePrefab.transform.rotation, transform).GetComponent<TileController>();
                 tiles[x, y] = newTile;
 
@@ -84,17 +87,17 @@ public class BoardManager : MonoBehaviour
     {
         List<int> possibleIDs = new List<int>();
 
-        for (int i = 0; i < tileTypes.Count; i++)
+        for (int i = 0; i < tileTypes.Count; i++) //add semuanya dulu kedalam possible id
         {
             possibleIDs.Add(i);
         }
 
-        if (x > 1 && tiles[x - 1, y].id == tiles[x - 2, y].id)
+        if (x > 1 && tiles[x - 1, y].id == tiles[x - 2, y].id) //kalau dikiri dan kirinya lagi sama, remove idnya
         {
             possibleIDs.Remove(tiles[x - 1, y].id);
         }
 
-        if (y > 1 && tiles[x, y - 1].id == tiles[x, y - 2].id)
+        if (y > 1 && tiles[x, y - 1].id == tiles[x, y - 2].id) //kalau dibawah dan bawahnya lagi sama, remove idnya
         {
             possibleIDs.Remove(tiles[x, y - 1].id);
         }
@@ -132,7 +135,7 @@ public class BoardManager : MonoBehaviour
 
     #endregion
 
-    private Vector2Int GetTileIndex(TileController tile)
+    private Vector2Int GetTileIndex(TileController tile) //cari tile secara linear dari bawah ke atas dan kiri ke kanan
     {
         for (int x = 0; x < boardSize.x; x++)
         {
@@ -141,10 +144,10 @@ public class BoardManager : MonoBehaviour
                 if (tile == tiles[x, y]) return new Vector2Int(x, y);
             }
         }
-        return new Vector2Int(-1, -1);
+        return new Vector2Int(-1, -1); //kalau tidak ada yang cocok dengan tile itu
     }
 
-    public Vector2 GetPositionFromIndex(Vector2Int index)
+    public Vector2 GetPositionFromIndex(Vector2Int index) //dapatkan posisi dari tile yang mempunyai index tersebut
     {
         Vector2 tileSize = tilePrefab.GetComponent<SpriteRenderer>().size;
         return new Vector2(startPos.x + ((tileSize.x + offsetTile.x) * index.x), startPos.y + ((tileSize.y + offsetTile.y) * index.y));
@@ -152,30 +155,31 @@ public class BoardManager : MonoBehaviour
 
     #region match
 
-    public void Process()
+    public void Process() //proses untuk cek match, drop, fill, dan reposition
     {
         IsProcessing = true;
         combo = 0;
         ProcessMatches();
     }
 
-    private void ProcessMatches()
+    private void ProcessMatches() // proses untuk ngecek match
     {
         List<TileController> allMatchingTiles = GetAllMatches();
 
-        if (allMatchingTiles == null || allMatchingTiles.Count == 0)
+        if (allMatchingTiles == null || allMatchingTiles.Count == 0) //kalau tidak ada yang match, bisa di skip
         {
             IsProcessing = false;
             return;
         }
 
         combo += 1;
-        ScoreManager.Instance.IncrementScore(allMatchingTiles.Count, combo);
+        ScoreManager.Instance.IncrementScore(allMatchingTiles.Count, combo); // tambahkan score sesuai dengan tile yang match dan combo
 
+        //mulai proses clear match
         StartCoroutine(ClearMatches(allMatchingTiles, ProcessDrop));
     }
 
-    public List<TileController> GetAllMatches()
+    public List<TileController> GetAllMatches() //mendapatkan semua match dalam board
     {
         List<TileController> matchingTiles = new List<TileController>();
 
@@ -183,7 +187,7 @@ public class BoardManager : MonoBehaviour
         {
             for (int y = 0; y < boardSize.y; y++)
             {
-                List<TileController> matchingTilesFromOneTile = tiles[x, y].GetAllMatches();
+                List<TileController> matchingTilesFromOneTile = tiles[x, y].GetAllMatches(); //dapatkan semua match dalam tile tersebut
 
                 //kalau tidak ada matching dari tile tersebut, lewati
                 if (matchingTilesFromOneTile == null || matchingTilesFromOneTile.Count == 0)
@@ -191,7 +195,7 @@ public class BoardManager : MonoBehaviour
                     continue;
                 }
 
-                foreach (TileController tile in matchingTilesFromOneTile)
+                foreach (TileController tile in matchingTilesFromOneTile) //masukkan semua tile yang matching
                 {
                     if (!matchingTiles.Contains(tile))
                     {
@@ -204,6 +208,7 @@ public class BoardManager : MonoBehaviour
         return matchingTiles;
     }
 
+    //fungsi untuk menghilangkan semua match
     private IEnumerator ClearMatches(List<TileController> matchingTiles, System.Action OnCompleted)
     {
         List<bool> isAllClearingCompleted = new List<bool>();
@@ -218,11 +223,13 @@ public class BoardManager : MonoBehaviour
             int index = i;
             StartCoroutine(matchingTiles[i].SetDestroyed(() => { isAllClearingCompleted[index] = true; }));
         }
+        //tunggu sampai semuanya sudah selesai
         yield return new WaitUntil(() => { return IsProcessCompleted(isAllClearingCompleted); });
 
         OnCompleted?.Invoke();
     }
 
+    //fungsi untuk mengecek apakah semua proses sudah selesai
     public bool IsProcessCompleted(List<bool> b)
     {
         foreach (bool item in b)
@@ -235,18 +242,20 @@ public class BoardManager : MonoBehaviour
     #endregion
 
     #region drop
-    private void ProcessDrop()
+    private void ProcessDrop() // proses drop tile
     {
         Dictionary<TileController, int> droppingTiles = GetAllDroppingTiles();
-        StartCoroutine(DropTiles(droppingTiles, ProcessDestroyAndFill));
+        StartCoroutine(DropTiles(droppingTiles, ProcessDestroyAndFill)); //jalankan perhitungan drop dan invoke process destroy and fill setelahnya
     }
 
+    //fungsi menghitung seberapa banyak tile dalam board harus drop
     private IEnumerator DropTiles(Dictionary<TileController, int> droppingTiles, System.Action OnCompleted)
     {
         foreach (KeyValuePair<TileController, int> droppingTileInfo in droppingTiles)
         {
             Vector2Int tileIndex = GetTileIndex(droppingTileInfo.Key);
 
+            //swap tile yang drop dengan yang dihancurkan
             TileController tile = droppingTileInfo.Key;
             tiles[tileIndex.x, tileIndex.y] = tiles[tileIndex.x, tileIndex.y - droppingTileInfo.Value];
             tiles[tileIndex.x, tileIndex.y - droppingTileInfo.Value] = tile;
@@ -293,9 +302,10 @@ public class BoardManager : MonoBehaviour
     private void ProcessDestroyAndFill()
     {
         List<TileController> destroyedTiles = GetAllDestroyedTiles();
-        StartCoroutine(DestroyAndFillTiles(destroyedTiles, ProcessReposition));
+        StartCoroutine(DestroyAndFillTiles(destroyedTiles, ProcessReposition)); // jalankan proses destroy and fill, dan jalankan reposisi setelahnya
     }
 
+    //dapatkan semua tiles yang ingin di destroy
     private List<TileController> GetAllDestroyedTiles()
     {
         List<TileController> destroyedTiles = new List<TileController>();
@@ -327,7 +337,7 @@ public class BoardManager : MonoBehaviour
         foreach (TileController tile in destroyedTiles)
         {
             Vector2Int tileIndex = GetTileIndex(tile);
-            Vector2Int targetIndex = new Vector2Int(tileIndex.x, highestIndex[tileIndex.x]);
+            Vector2Int targetIndex = new Vector2Int(tileIndex.x, highestIndex[tileIndex.x]); //dapatkan index baru, yaitu dipaling atas
             highestIndex[tileIndex.x]--;
 
             tile.transform.position = new Vector2(tile.transform.position.x, spawnHeight);
@@ -346,6 +356,7 @@ public class BoardManager : MonoBehaviour
         StartCoroutine(RepositionTiles(ProcessMatches));
     }
 
+    //memposisikan ulang tiles sesuai dengan indexnya sekarang setelah di proses sebelumnya
     private IEnumerator RepositionTiles(System.Action OnCompleted)
     {
         List<bool> isAllRepositionCompleted = new List<bool>();
@@ -365,11 +376,13 @@ public class BoardManager : MonoBehaviour
                 isAllRepositionCompleted.Add(false);
 
                 int index = i;
+                //jalankan tiles ke posisi yang benar sekarang
                 StartCoroutine(tiles[x, y].MoveTilePosition(targetPosition, () => { isAllRepositionCompleted[index] = true; }));
 
                 i++;
             }
         }
+        //tunggu semua proses reposisi tiles selesai
         yield return new WaitUntil(() => { return IsProcessCompleted(isAllRepositionCompleted); });
 
         OnCompleted?.Invoke();

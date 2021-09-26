@@ -34,6 +34,7 @@ public class TimeManager : MonoBehaviour
     {
         if (GameFlowManager.Instance.IsGameOver) return;
 
+        //check kalau durasi game sudah berakhir
         if(gameTimer > gameDuration)
         {
             GameFlowManager.Instance.GameOver();

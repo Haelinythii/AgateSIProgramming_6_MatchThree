@@ -45,6 +45,8 @@ public class ScoreManager : MonoBehaviour
         currentScore = 0;
     }
 
+
+    //tambahkan score sekarang dengan rumus, serta mainkan score
     public void IncrementScore(int tileCount, int comboCount)
     {
         currentScore += (tileCount * tileRatio) * (comboCount * comboRatio);
@@ -52,6 +54,7 @@ public class ScoreManager : MonoBehaviour
         SoundManager.Instance.PlayScoreSound(comboCount > 1);
     }
 
+    //set highscore yang didapat
     public void SetHighscore()
     {
         highscore = Mathf.Max(currentScore, highscore);
